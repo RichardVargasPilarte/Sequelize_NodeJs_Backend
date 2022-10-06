@@ -1,16 +1,33 @@
-const express = require('express');
+const express = require('express'); // import express
+const bodyParser = require("body-parser");
 const morgan = require('morgan');
-const cors = require('cors'); 
+const cors = require('cors');
+// const app = require('app');
 
+const db = require('./models')
 require('dotenv').config();
 
-const app = express(); // Se crea instancia de express
-app.use(morgan('dev')); // Se muestran por consolas las peticiones HTTP
-app.use(cors()); // Se habilitan los cors
+const PORT = process.env.PORT || '6000';
 
-app.use(express.json()); // Se habilita JSON
-app.use(express.static('public')); // Se habilitan los archivos estaticos
+const app = express();
+app.use(morgan('dev'));
+app.use(cors());
 
-app.listen(process.env.PORT, () => {
-    console.log('listening on port ' + process.env.PORT); // Escucha el puerto definido en las variables de entorno
-});
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// El metodo sync es el encargado de sincronizar los modelos con la base de datos
+db.sequelize.sync()
+  .then(() => {
+    /**Puerto de escucha */
+    app.listen(PORT, () => {
+      console.log(`Escuchando por el puerto ${PORT}`)
+    })
+    console.log("Conexión con la BD establecida con exito.");
+  })
+  .catch((err) => {
+    console.log("Fallo la sincronización con la BD: " + err.message);
+  });
+
+/** Rutas */
+app.use('/api/usuarios', require('./routes/usuariosRoutes'));
