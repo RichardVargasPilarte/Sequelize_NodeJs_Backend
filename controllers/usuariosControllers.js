@@ -2,19 +2,33 @@ const db = require('../models');
 const Usuarios = db.usuarios;
 const Op = db.Sequelize.Op;
 
+const { pagination } = require('../helpers/pagination');
+
 // TODO: Se listan los datos
 const getUsuarios = async (req, res) => {
     try {
+
+        const busqueda = {};
+        const { nombre, apellidos, username } = req.query;
+
+        if (nombre) busqueda.nombre = { [Op.like]: `%${nombre}%` }
+        if (apellidos) busqueda.apellidos = { [Op.like]: `%${apellidos}%` }
+        if (username) busqueda.username = { [Op.like]: `%${username}%` }
+
+        // const users = await Usuarios.findAll
         const users = await Usuarios.findAll({
-            where: {
+            where:
+            {
                 eliminado: 'NO'
-            }
+            },
+            order: ['id']
         });
         // console.log(users);
+
         res.json(
             users
         );
-    } catch (error) {
+    } catch (err) {
         return res.status(500).json({
             ok: true,
             msg: err.msg || 'Hubo error inesperado al momento de traer los datos'
@@ -22,18 +36,103 @@ const getUsuarios = async (req, res) => {
     }
 }
 
+const paginacion = async (req, res) => {
+
+    try {
+        const busqueda = {};
+        const { nombre, apellidos, username } = req.query;
+
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const per_page = req.query.per_page ? parseInt(req.query.page) : 1;
+
+        if (nombre) busqueda.nombre = { [Op.like]: `%${nombre}%` }
+        if (apellidos) busqueda.apellidos = { [Op.like]: `%${apellidos}%` }
+        if (username) busqueda.username = { [Op.like]: `%${username}%` }
+
+        const { count, rows } = await Usuarios.findAndCountAll({
+            where: {
+                ...busqueda
+            },
+            offset: 0,
+            limit: 10,
+            distinct: true,
+            order: ['id']
+        });
+
+        console.log(pagination);
+        const result = pagination({
+            data: rows,
+            count,
+            page,
+            per_page
+        });
+
+        if (count <= 0) {
+            res.status(404).send({
+                message: 'No hay usuario registrado'
+            });
+        }
+
+        // console.log(resp);
+        // console.log(busqueda);
+        res.status(200).send({
+            result
+        });
+    } catch (err) {
+        return res.status(500).json({
+            msg: err.msg || 'Hubo error inesperado al momento de traer los datos'
+        });
+    }
+}
+
+// TODO: Se realiza la busqueda por nombre, apellidos, username
+const busqueda = async (req, res) => {
+    try {
+        const busqueda = {};
+        const { nombre, apellidos, username } = req.query;
+
+        if (nombre) busqueda.nombre = { [Op.like]: `%${nombre}%` }
+        if (apellidos) busqueda.apellidos = { [Op.like]: `%${apellidos}%` }
+        if (username) busqueda.username = { [Op.like]: `%${username}%` }
+
+        const resp = await Usuarios.findAll({
+            where: {
+                ...busqueda
+            },
+            order: ['id']
+        });
+
+        if (resp.busqueda === 0) {
+            res.status(404).send({
+                message: 'No hay usuario registrado'
+            });
+        }
+
+        // console.log(resp);
+        // console.log(busqueda);
+        res.status(200).send({
+            resp
+        });
+    } catch (err) {
+        return res.status(500).json({
+            msg: err.msg || 'Hubo error inesperado al momento de traer los datos'
+        });
+    }
+}
+
+// TODO: Se obtiene el usuario según su Id
 const getUserById = async (req, res) => {
     try {
         const { id } = req.params
 
-        const user = await Usuarios.findByPk({
+        const user = await Usuarios.findOne({
             where: {
-                id
+                id: req.params.id
             }
-        })
-
+        });
+        // console.log(user);
         res.json(user)
-    } catch (error) {
+    } catch (err) {
         return res.status(500).json({
             ok: true,
             msg: err.msg || 'Hubo error inesperado al momento de traer el dato'
@@ -57,7 +156,6 @@ const crearUsuarios = async (req, res) => {
 
         if (existeUserName) {
             return res.status(400).json({
-                ok: false,
                 msg: 'El nombre de usuario ya esta registrado'
             });
         }
@@ -77,7 +175,7 @@ const crearUsuarios = async (req, res) => {
         res.json(
             newUsers
         );
-    } catch (error) {
+    } catch (err) {
         return res.status(500).json({
             msg: err.msg || 'Hubo error inesperado al momento de crear el usuario'
         });
@@ -93,7 +191,7 @@ const actualizarUsuarios = async (req, res) => {
         const { nombre, apellidos, username, password, inss, email, role } = req.body;
 
         const user = await Usuarios.findByPk(id);
-        console.log(user);
+        // console.log(user);
 
         if (user.email !== email) {
 
@@ -114,12 +212,13 @@ const actualizarUsuarios = async (req, res) => {
         user.username = username
         user.password = password
         user.inss = inss
+        // user.eliminado = eliminado
         user.email = email
         user.role = role
 
         await user.save()
         res.json(user);
-    } catch (error) {
+    } catch (err) {
         return res.status(500).json({
             msg: err.msg || 'Hubo error inesperado al momento de actualizar el usuario'
         });
@@ -128,7 +227,6 @@ const actualizarUsuarios = async (req, res) => {
 
 // TODO: Se actualiza el estado del campo eliminado, el cual es NO por defecto a SI, y de esta manera no 
 const borrarUsuarios = async (req, res) => {
-    // console.log(req.params.id)
 
     try {
         await Usuarios.update(
@@ -139,10 +237,11 @@ const borrarUsuarios = async (req, res) => {
                 where: { id: req.params.id },
             }
         );
+        // console.log(req.params.id)
         res.sendStatus(204).json({
             msg: 'Usuario eliminado con exito'
         });
-    } catch (error) {
+    } catch (err) {
         return res.status(500).json({
             msg: err.msg || 'Hubo error inesperado al momento de eliminar el usuario'
         });
@@ -151,6 +250,8 @@ const borrarUsuarios = async (req, res) => {
 
 module.exports = {
     getUsuarios,
+    busqueda,
+    paginacion,
     getUserById,
     crearUsuarios,
     actualizarUsuarios,
