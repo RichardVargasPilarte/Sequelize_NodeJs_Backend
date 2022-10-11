@@ -8,14 +8,6 @@ const { pagination } = require('../helpers/pagination');
 const getUsuarios = async (req, res) => {
     try {
 
-        const busqueda = {};
-        const { nombre, apellidos, username } = req.query;
-
-        if (nombre) busqueda.nombre = { [Op.like]: `%${nombre}%` }
-        if (apellidos) busqueda.apellidos = { [Op.like]: `%${apellidos}%` }
-        if (username) busqueda.username = { [Op.like]: `%${username}%` }
-
-        // const users = await Usuarios.findAll
         const users = await Usuarios.findAll({
             where:
             {
@@ -91,9 +83,9 @@ const busqueda = async (req, res) => {
         const busqueda = {};
         const { nombre, apellidos, username } = req.query;
 
-        if (nombre) busqueda.nombre = { [Op.like]: `%${nombre}%` }
-        if (apellidos) busqueda.apellidos = { [Op.like]: `%${apellidos}%` }
-        if (username) busqueda.username = { [Op.like]: `%${username}%` }
+        if (nombre) busqueda.nombre = { [Op.iLike]: `%${nombre}%` }
+        if (apellidos) busqueda.apellidos = { [Op.iLike]: `%${apellidos}%` }
+        if (username) busqueda.username = { [Op.iLike]: `%${username}%` }
 
         const resp = await Usuarios.findAll({
             where: {
@@ -102,7 +94,7 @@ const busqueda = async (req, res) => {
             order: ['id']
         });
 
-        if (resp.busqueda === 0) {
+        if (resp.busqueda <= 0) {
             res.status(404).send({
                 message: 'No hay usuario registrado'
             });
@@ -188,7 +180,7 @@ const actualizarUsuarios = async (req, res) => {
     try {
         const { id } = req.params;
 
-        const { nombre, apellidos, username, password, inss, email, role } = req.body;
+        const { nombre, apellidos, username, password, inss, eliminado, email, role } = req.body;
 
         const user = await Usuarios.findByPk(id);
         // console.log(user);
@@ -212,7 +204,7 @@ const actualizarUsuarios = async (req, res) => {
         user.username = username
         user.password = password
         user.inss = inss
-        // user.eliminado = eliminado
+        user.eliminado = eliminado
         user.email = email
         user.role = role
 
@@ -229,16 +221,16 @@ const actualizarUsuarios = async (req, res) => {
 const borrarUsuarios = async (req, res) => {
 
     try {
-        await Usuarios.update(
-            {
-                eliminado: 'SI'
-            },
-            {
-                where: { id: req.params.id },
-            }
-        );
-        // console.log(req.params.id)
-        res.sendStatus(204).json({
+
+        const { id } = req.params;
+
+        const user = await Usuarios.findByPk(id);
+
+        user.eliminado = 'SI'
+
+        await user.save()
+
+        return res.status(204).json({
             msg: 'Usuario eliminado con exito'
         });
     } catch (err) {
