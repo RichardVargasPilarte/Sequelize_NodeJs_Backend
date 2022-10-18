@@ -2,7 +2,7 @@ module.exports = (sequelize, Sequelize) => {
     const Usuarios = sequelize.define('Usuarios', {
         nombre: {
             type: Sequelize.STRING,
-            allowNull: false
+            allowNull: false,
         },
         apellidos: {
             type: Sequelize.STRING,

@@ -2,7 +2,8 @@ const db = require('../models');
 const Usuarios = db.usuarios;
 const Op = db.Sequelize.Op;
 
-const { pagination } = require('../helpers/pagination');
+const bcryptjs = require('bcryptjs');
+const { generarJWT } = require('../helpers/jwt');
 
 // TODO: Se listan los datos
 const getUsuarios = async (req, res) => {
@@ -28,54 +29,6 @@ const getUsuarios = async (req, res) => {
     }
 }
 
-const paginacion = async (req, res) => {
-
-    try {
-        const busqueda = {};
-        const { nombre, apellidos, username } = req.query;
-
-        const page = req.query.page ? parseInt(req.query.page) : 1;
-        const per_page = req.query.per_page ? parseInt(req.query.page) : 1;
-
-        if (nombre) busqueda.nombre = { [Op.like]: `%${nombre}%` }
-        if (apellidos) busqueda.apellidos = { [Op.like]: `%${apellidos}%` }
-        if (username) busqueda.username = { [Op.like]: `%${username}%` }
-
-        const { count, rows } = await Usuarios.findAndCountAll({
-            where: {
-                ...busqueda
-            },
-            offset: 0,
-            limit: 10,
-            distinct: true,
-            order: ['id']
-        });
-
-        console.log(pagination);
-        const result = pagination({
-            data: rows,
-            count,
-            page,
-            per_page
-        });
-
-        if (count <= 0) {
-            res.status(404).send({
-                message: 'No hay usuario registrado'
-            });
-        }
-
-        // console.log(resp);
-        // console.log(busqueda);
-        res.status(200).send({
-            result
-        });
-    } catch (err) {
-        return res.status(500).json({
-            msg: err.msg || 'Hubo error inesperado al momento de traer los datos'
-        });
-    }
-}
 
 // TODO: Se realiza la busqueda por nombre, apellidos, username
 const busqueda = async (req, res) => {
@@ -177,24 +130,30 @@ const crearUsuarios = async (req, res) => {
 // TODO: Se actualizan los datos del usuario
 const actualizarUsuarios = async (req, res) => {
 
+    const { id } = req.params;
+
     try {
-        const { id } = req.params;
 
         const { nombre, apellidos, username, password, inss, eliminado, email, role } = req.body;
 
         const user = await Usuarios.findByPk(id);
         // console.log(user);
 
-        if (user.email !== email) {
+        if (user.username !== username) {
 
-            const existemail = await Usuarios.findOne({
-                where: { email: email }
+            const existeusername = await Usuarios.findOne({
+                where: { username: username }
             });
 
-            if (existemail) {
+            if (existeusername === existeusername) {
+                return res.status(200).json({
+                    ok: false,
+                    msg: 'Te actualizo ahorita'
+                })
+            } else {
                 return res.status(400).json({
                     ok: false,
-                    msg: 'Ya existe un usuario con ese email'
+                    msg: 'Ya existe un usuario con ese username'
                 })
             }
         }
@@ -243,7 +202,6 @@ const borrarUsuarios = async (req, res) => {
 module.exports = {
     getUsuarios,
     busqueda,
-    paginacion,
     getUserById,
     crearUsuarios,
     actualizarUsuarios,

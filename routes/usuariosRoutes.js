@@ -3,7 +3,7 @@ const { Router } = require('express'); // import Router from express
 const { body } = require('express-validator');
 const { validarCampos } = require('../middlewares/validar_campos');
 
-const { getUsuarios, busqueda, paginacion, getUserById, crearUsuarios, actualizarUsuarios, borrarUsuarios } = require('../controllers/usuariosControllers');
+const { getUsuarios, busqueda, getUserById, crearUsuarios, actualizarUsuarios, borrarUsuarios } = require('../controllers/usuariosControllers');
 
 const router = Router(); // create an instance of Router
 
@@ -12,9 +12,6 @@ router.get('/', getUsuarios);
 
 //TODO: Ruta para realizar la busqueda de los usuarios según los parametros del controlador
 router.get('/busqueda', busqueda);
-
-
-router.get('/paginacion', paginacion);
 
 
 // TODO: Ruta para crear nuevos usuarios
