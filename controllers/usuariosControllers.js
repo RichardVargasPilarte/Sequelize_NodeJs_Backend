@@ -14,7 +14,9 @@ const getUsuarios = async (req, res) => {
             {
                 eliminado: 'NO'
             },
-            order: ['id']
+            order: [
+                ['id', 'DESC']
+            ]
         });
         // console.log(users);
 

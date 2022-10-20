@@ -18,7 +18,7 @@ module.exports = (sequelize, Sequelize) => {
             allowNull: false
         },
         inss: {
-            type: Sequelize.STRING,
+            type: Sequelize.INTEGER,
             allowNull: false
         },
         eliminado: {
