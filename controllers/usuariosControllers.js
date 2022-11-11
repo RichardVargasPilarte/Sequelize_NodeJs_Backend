@@ -36,10 +36,11 @@ const getUsuarios = async (req, res) => {
 const busqueda = async (req, res) => {
     try {
         const busqueda = {};
-        const { nombre, apellidos, username } = req.query;
+        // const { nombre, apellidos, username } = req.query;
+        const { username } = req.query;
 
-        if (nombre) busqueda.nombre = { [Op.iLike]: `%${nombre}%` }
-        if (apellidos) busqueda.apellidos = { [Op.iLike]: `%${apellidos}%` }
+        // if (nombre) busqueda.nombre = { [Op.iLike]: `%${nombre}%` }
+        // if (apellidos) busqueda.apellidos = { [Op.iLike]: `%${apellidos}%` }
         if (username) busqueda.username = { [Op.iLike]: `%${username}%` }
 
         const resp = await Usuarios.findAll({

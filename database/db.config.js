@@ -5,7 +5,7 @@ module.exports = {
     USER: process.env.DB_USER,
     PASSWORD: process.env.DB_PASS,
     DB: process.env.DB_NAME,
-    dialect: process.env.DB_DIALECT,
+    dialect: postgres,
     pool: {
         max: 10, // número máximo de conexiones en el grupo
         min: 0, // número mínimo de conexión en el grupo
