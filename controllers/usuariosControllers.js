@@ -36,11 +36,8 @@ const getUsuarios = async (req, res) => {
 const busqueda = async (req, res) => {
     try {
         const busqueda = {};
-        // const { nombre, apellidos, username } = req.query;
         const { username } = req.query;
 
-        // if (nombre) busqueda.nombre = { [Op.iLike]: `%${nombre}%` }
-        // if (apellidos) busqueda.apellidos = { [Op.iLike]: `%${apellidos}%` }
         if (username) busqueda.username = { [Op.iLike]: `%${username}%` }
 
         const resp = await Usuarios.findAll({
@@ -58,9 +55,9 @@ const busqueda = async (req, res) => {
 
         // console.log(resp);
         // console.log(busqueda);
-        res.status(200).send({
+        res.json(
             resp
-        });
+        );
     } catch (err) {
         return res.status(500).json({
             msg: err.msg || 'Hubo error inesperado al momento de traer los datos'
@@ -142,24 +139,24 @@ const actualizarUsuarios = async (req, res) => {
         const user = await Usuarios.findByPk(id);
         // console.log(user);
 
-        if (user.username !== username) {
+        // if (user.username !== username) {
 
-            const existeusername = await Usuarios.findOne({
-                where: { username: username }
-            });
+        //     const existeusername = await Usuarios.findOne({
+        //         where: { username: username }
+        //     });
 
-            if (existeusername === existeusername) {
-                return res.status(200).json({
-                    ok: false,
-                    msg: 'Te actualizo ahorita'
-                })
-            } else {
-                return res.status(400).json({
-                    ok: false,
-                    msg: 'Ya existe un usuario con ese username'
-                })
-            }
-        }
+        //     if (existeusername === existeusername) {
+        //         return res.status(200).json({
+        //             ok: false,
+        //             msg: 'Te actualizo ahorita'
+        //         })
+        //     } else {
+        //         return res.status(400).json({
+        //             ok: false,
+        //             msg: 'Ya existe un usuario con ese username'
+        //         })
+        //     }
+        // }
 
         user.nombre = nombre
         user.apellidos = apellidos
