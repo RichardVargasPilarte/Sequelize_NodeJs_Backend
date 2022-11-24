@@ -6,6 +6,8 @@ const cors = require('cors');
 const db = require('./models')
 require('dotenv').config();
 
+const path = require('path');
+
 const PORT = process.env.PORT || '3000';
 
 const app = express();
@@ -29,5 +31,12 @@ db.sequelize.sync()
     console.log("Fallo la sincronización con la BD: " + err.message);
   });
 
-/** Rutas */
-app.use('/api/usuarios', require('./routes/usuariosRoutes'));
+  // Directorio publico
+  app.use(express.static('public'))
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, 'public/index.html'));
+  });
+
+  /** Rutas */
+  app.use('/api/usuarios', require('./routes/usuariosRoutes'));
