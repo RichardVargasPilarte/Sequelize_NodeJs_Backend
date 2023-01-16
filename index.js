@@ -6,7 +6,7 @@ const cors = require('cors');
 const db = require('./models')
 require('dotenv').config();
 
-const path = require('path');
+// const path = require('path');
 
 const PORT = process.env.PORT || '3000';
 
@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 
 // El metodo sync es el encargado de sincronizar los modelos con la base de datos
-db.sequelize.sync()
+db.sequelize.sync({ alter: true })
   .then(() => {
     /**Puerto de escucha */
     app.listen(PORT, () => {
@@ -32,11 +32,12 @@ db.sequelize.sync()
   });
 
   // Directorio publico
-  app.use(express.static('public'))
+  // app.use(express.static('public'))
 
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, 'public/index.html'));
-  });
+  // app.get('*', (req, res) => {
+  //   res.sendFile(path.resolve(__dirname, 'public/index.html'));
+  // });
 
   /** Rutas */
   app.use('/api/usuarios', require('./routes/usuariosRoutes'));
+  app.use('/api/login', require('./routes/authRoutes'));

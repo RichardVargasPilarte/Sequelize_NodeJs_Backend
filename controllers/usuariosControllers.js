@@ -75,7 +75,7 @@ const getUserById = async (req, res) => {
                 id: req.params.id
             }
         });
-        // console.log(user);
+        // console.log(id);
         res.json(user)
     } catch (err) {
         return res.status(500).json({
@@ -117,9 +117,22 @@ const crearUsuarios = async (req, res) => {
             role,
         });
 
-        res.json(
-            newUsers
-        );
+        // TODO: Encriptar contraseña
+        const salt = bcryptjs.genSaltSync();
+        newUsers.password = bcryptjs.hashSync(password, salt);
+
+        // TODO: Guarda USUARIO
+        await newUsers.save();
+
+        // TODO: Generar token de jwt
+        const token = await generarJWT(newUsers.id)
+
+        res.json({
+            ok: true,
+            newUsers,
+            token
+        });
+
     } catch (err) {
         return res.status(500).json({
             msg: err.msg || 'Hubo error inesperado al momento de crear el usuario'
@@ -130,13 +143,66 @@ const crearUsuarios = async (req, res) => {
 // TODO: Se actualizan los datos del usuario
 const actualizarUsuarios = async (req, res) => {
 
-    const { id } = req.params;
-
+    const {id} = req.params;
     try {
 
-        const { nombre, apellidos, username, password, inss, eliminado, email, role } = req.body;
+        // const {id} = req.params;
+        const { nombre, apellidos, username, inss, email, role } = req.body;
 
-        const user = await Usuarios.findByPk(id);
+        const usuarioDB = await Usuarios.findByPk(id);
+        // const findById = await Usuarios.findOne({
+        //     where: {
+        //         id
+        //     }
+        // });
+        console.log(id);
+
+        if(!usuarioDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: `No existe usuario ${id}`
+            });
+        }
+
+        if (nombre) usuarioDB.nombre = nombre;
+        if (apellidos) usuarioDB.apellidos = apellidos;
+        if (username) usuarioDB.username = username;
+        if (inss) usuarioDB.inss = inss;
+        if (email) usuarioDB.email = email;
+        if (role) usuarioDB.role = role;
+
+        const updatePerson = await usuarioDB.save();
+
+        if(!updatePerson) {
+            return res.status(404).json({
+                ok: false,
+                msg: `Fallo actualización del usuario ${id}`
+            });
+        }
+
+        // Actualizaciones
+        // const campos  = req.body;
+
+        // if (usuarioDB.username !== username) {
+        //     const existeUserName = await Usuarios.findOne({
+        //         where: { username }
+        //     })
+
+        //     if (existeUserName) {
+        //         return res.status(400).json({
+        //             ok: false,
+        //             msg: 'Ya existe un usuario con ese nombre de usuario'
+        //         })
+        //     }
+        // }
+
+        // campos.username = username;
+
+        // const usuarioActualizado = await Usuarios.update(id, campos, {new: true});
+
+        // const { nombre, apellidos, username, password, inss, eliminado, email, role } = req.body;
+
+        // const user = await Usuarios.findByPk(uid);
         // console.log(user);
 
         // if (user.username !== username) {
@@ -158,17 +224,20 @@ const actualizarUsuarios = async (req, res) => {
         //     }
         // }
 
-        user.nombre = nombre
-        user.apellidos = apellidos
-        user.username = username
-        user.password = password
-        user.inss = inss
-        user.eliminado = eliminado
-        user.email = email
-        user.role = role
+        // user.nombre = nombre
+        // user.apellidos = apellidos
+        // user.username = username
+        // user.password = password
+        // user.inss = inss
+        // user.eliminado = eliminado
+        // user.email = email
+        // user.role = role
 
-        await user.save()
-        res.json(user);
+        // await user.save()
+        res.json({
+            ok: true,
+            user: updatePerson
+        });
     } catch (err) {
         return res.status(500).json({
             msg: err.msg || 'Hubo error inesperado al momento de actualizar el usuario'
